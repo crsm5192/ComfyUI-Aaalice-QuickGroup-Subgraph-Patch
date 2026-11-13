@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+node_modules/
+.aaalice-quickgroup-subgraph-patch/
+github-token.txt
+.env
