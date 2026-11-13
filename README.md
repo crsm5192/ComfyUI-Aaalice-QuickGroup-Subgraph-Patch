@@ -2,7 +2,50 @@
 
 修复 [ComfyUI-Aaalice-Nodes](https://github.com/Aaalice233/ComfyUI-Aaalice-Nodes) 的 **⚡ 快速组管理器** 无法发现、控制和定位原生子图内 group 的问题。
 
-这是独立的补丁项目，包含安装工具和前端补丁。**不是直接放入 `custom_nodes` 就会自动加载的节点包**。安装工具只修改原包的两个前端文件，并新增一个辅助模块，不增加 Python 依赖，也不新增节点。
+**v1.1.0 起是可直接安装的 ComfyUI 扩展包**，支持绘世启动器从 GitHub 地址安装，也支持 ComfyUI-Manager 的 Install via Git URL。安装后随 ComfyUI 自动加载，无需运行补丁命令。
+
+本扩展依赖已安装并启用的 `ComfyUI-Aaalice-Nodes`，不新增节点，不增加 Python 依赖。它在 ComfyUI 提供前端脚本时加载修正版本，**不改写原节点包文件**。停用或删除本扩展并重启后，原包自动恢复原来的行为。
+
+## 安装
+
+### 绘世启动器 / ComfyUI-Manager
+
+1. 先安装并启用 `ComfyUI-Aaalice-Nodes`。
+2. 在启动器的扩展安装页面，或 ComfyUI-Manager 的 **Install via Git URL** 中，填写：
+
+   ```text
+   https://github.com/crsm5192/ComfyUI-Aaalice-QuickGroup-Subgraph-Patch
+   ```
+
+3. 安装完成后重启 ComfyUI，在浏览器按 **Ctrl+F5**。
+
+如果之前安装失败，请刷新启动器的仓库信息，再用同一地址重新安装。若启动器遗留了不完整的补丁目录，请先通过启动器移除该失败项再重装。
+
+### 手动安装
+
+在 ComfyUI 的 `custom_nodes` 目录克隆仓库即可，无需运行 `patch.py`：
+
+```powershell
+cd "D:\Softwares\ComfyUI\ComfyUI\custom_nodes"
+git clone https://github.com/crsm5192/ComfyUI-Aaalice-QuickGroup-Subgraph-Patch.git
+```
+
+安装后的目录应为：
+
+```text
+custom_nodes/
+├── ComfyUI-Aaalice-Nodes/
+└── ComfyUI-Aaalice-QuickGroup-Subgraph-Patch/
+    ├── __init__.py
+    ├── extension.py
+    ├── requirements.txt
+    ├── pyproject.toml
+    ├── web/extension.js
+    ├── payload/quick_group_manager_subgraphs.js
+    └── patch.py
+```
+
+随后重启 ComfyUI，并在浏览器按 **Ctrl+F5**。Python 版本要求为 3.10+，直接使用 ComfyUI 自带的 Python 即可。
 
 ## 修复行为
 
@@ -16,48 +59,41 @@
 
 多个子图节点引用同一份子图定义时，列出一次，显示第一条发现的路径；开关作用于该共享定义的所有引用。这与 ComfyUI 原生子图的共享节点模式一致。
 
-## 安装（Windows）
+## 状态、更新与卸载
 
-要求 Python 3.10+。关闭 ComfyUI 后，在 PowerShell 中执行：
+浏览器打开工作流后，ComfyUI 日志中出现 `Active / 子图补丁已启用` 表示补丁已生效。也可在 ComfyUI 地址后打开 `/aaalice-quickgroup-subgraph-patch/status`，确认 `state` 为 `active`。
 
-```powershell
-cd C:\Project\ComfyUI-Aaalice-QuickGroup-Subgraph-Patch
-python patch.py check --target "D:\Softwares\ComfyUI\ComfyUI\custom_nodes\ComfyUI-Aaalice-Nodes"
-python patch.py install --target "D:\Softwares\ComfyUI\ComfyUI\custom_nodes\ComfyUI-Aaalice-Nodes"
-```
+若原节点包未启用，或其更新后的代码不兼容，扩展会在日志和界面中提示原因，不替换不兼容的脚本。请启用原包，或更新本补丁后重启 ComfyUI。
 
-随后启动 ComfyUI，在浏览器按 **Ctrl+F5**。其他安装位置请替换 `--target`。
+通过启动器 / Manager 更新本扩展即可。卸载时在启动器中停用或删除本补丁，然后重启 ComfyUI 并按 **Ctrl+F5**；原节点包无需恢复文件。
 
-原文件备份位于目标节点包的 `.aaalice-quickgroup-subgraph-patch/`，包含原文件和 SHA-256 校验记录。重复安装不会重复打补丁；无法识别的源代码会在写入前报错。备份目录应保留到卸载完成。
+### 从 v1.0 手动补丁迁移
 
-## 检查与卸载
+如果之前执行过 `patch.py install`，请先关闭 ComfyUI，再使用原来的工具卸载手动补丁：
 
 ```powershell
-python patch.py check --target "D:\Softwares\ComfyUI\ComfyUI\custom_nodes\ComfyUI-Aaalice-Nodes"
 python patch.py uninstall --target "D:\Softwares\ComfyUI\ComfyUI\custom_nodes\ComfyUI-Aaalice-Nodes"
 ```
 
-卸载恢复原文件的完整字节内容并删除新增模块。安装后如果原文件被更新或手动修改，工具会拒绝覆盖这些改动；请保留现有文件，再根据备份手动合并或恢复。**更新原节点包前先卸载补丁**，更新后重新执行 `check`。
+然后按上面的方式安装扩展。扩展也可以识别完整且未修改的旧补丁，但仅删除扩展不会移除旧版已经写入的补丁；因此建议先完成上述迁移。
 
-修改范围：
+`patch.py` 继续保留 `check / install / uninstall`，用于旧版维护。普通扩展安装无需使用它。旧工具的备份位于原包 `.aaalice-quickgroup-subgraph-patch/`；若原包被手动编辑或更新，卸载工具会保留改动并拒绝直接覆盖，请根据备份合并或恢复。
 
-| 文件 | 修改用途 |
-| --- | --- |
-| `js/lib/quick_group_manager_runtime.js` | 扫描后代子图、使用根工作流事务、刷新各层控件 |
-| `js/lib/group_navigation.js` | 导航到 group 所属图并使用原生边界 |
-| `js/lib/quick_group_manager_subgraphs.js` | 新增扫描、组标识和导航辅助模块 |
+## 验证与兼容性
 
-## 验证
+已验证原节点包提交 `2395128e6f02d60ccc4c2b514201533cd8fd3f92`，并核对当前本机 ComfyUI 的扩展加载、静态脚本路径和安全中间件顺序。
 
-已验证原节点包提交 `2395128e6f02d60ccc4c2b514201533cd8fd3f92`。共 **44 项自动测试**通过：6 项子图辅助模块测试、8 项安装工具测试，以及在原包临时副本上运行的 30 项回归测试，其中包含 7 项新增子图回归测试。临时副本验证不会修改指定节点包。
+共 **56 项自动测试**：12 项扩展安装和 HTTP 加载测试、8 项旧安装工具测试、6 项子图辅助模块测试，以及在原包临时副本上运行的 30 项回归测试。覆盖启动加载顺序、脚本地址、停用恢复、不修改原文件、缺失和不兼容原包、旧补丁兼容，以及多层子图、开关、联动、排序、预设与导航。完整浏览器交互仍需结合实际工作流确认。
 
 ```powershell
-node --test tests/subgraphs.test.js
+# 使用带有 aiohttp 的 ComfyUI Python；例如绘世的 python\python.exe
 python -m unittest discover -s tests -p "test_*.py" -v
+node --test tests/subgraphs.test.js
+node --check web/extension.js
 python tests/verify_target.py --target "D:\Softwares\ComfyUI\ComfyUI\custom_nodes\ComfyUI-Aaalice-Nodes"
 ```
 
-测试覆盖多层子图、重复编号、共享定义与循环引用、真实节点引用、跨层联动、颜色过滤、排序、静音/绕过、预设恢复、空缓存恢复、导航、重复安装、逐字节卸载、写入失败回滚和用户改动保护。浏览器内的完整交互仍需在实际 ComfyUI 工作流中确认。
+测试仅使用临时目录，不修改指定节点包。GitHub Actions 自动运行扩展和旧工具测试；原包回归验证需要本地原包源码。
 
 ## 许可
 

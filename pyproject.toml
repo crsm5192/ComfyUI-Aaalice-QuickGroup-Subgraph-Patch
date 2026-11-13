@@ -1,0 +1,14 @@
+[project]
+name = "comfyui-aaalice-quickgroup-subgraph-patch"
+version = "1.1.0"
+description = "Installable subgraph support extension for Aaalice QuickGroupManager"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/crsm5192/ComfyUI-Aaalice-QuickGroup-Subgraph-Patch"
+
+[tool.comfy]
+DisplayName = "Aaalice QuickGroupManager Subgraph Patch"
